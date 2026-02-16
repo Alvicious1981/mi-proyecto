@@ -146,6 +146,28 @@ class MCPServerTest(unittest.TestCase):
                 {"source_ids": ["a"], "destination_title": "fusion"},
             )
 
+    def test_resources_listing_and_read(self) -> None:
+        server = NotebookLMMCPServer()
+        created = server.call_tool(
+            "notebook.create",
+            {"title": "Recurso Notebook", "template_id": "analisis_producto"},
+        )
+
+        resources = server.list_resources()
+        uris = {item["uri"] for item in resources}
+        self.assertIn("mcp://server/info", uris)
+        self.assertIn("mcp://templates/notebook", uris)
+        self.assertIn(f"mcp://notebooks/{created['id']}/summary", uris)
+
+        server_info = server.read_resource("mcp://server/info")
+        self.assertEqual(server_info["contents"]["name"], "notebooklm-mcp-server")
+
+        templates = server.read_resource("mcp://templates/notebook")
+        self.assertIn("investigacion_academica", templates["contents"])
+
+        notebook_summary = server.read_resource(f"mcp://notebooks/{created['id']}/summary")
+        self.assertEqual(notebook_summary["contents"]["id"], created["id"])
+
     def test_descriptor_and_export_script(self) -> None:
         server = NotebookLMMCPServer()
         descriptor = server.descriptor()
@@ -153,8 +175,10 @@ class MCPServerTest(unittest.TestCase):
         self.assertIn("server", descriptor)
         self.assertIn("capabilities", descriptor)
         self.assertIn("tools", descriptor)
+        self.assertIn("resources", descriptor)
         self.assertEqual(descriptor["server"]["name"], "notebooklm-mcp-server")
         self.assertGreaterEqual(descriptor["capabilities"]["tools"]["count"], 1)
+        self.assertTrue(descriptor["capabilities"]["resources"]["supported"])
 
         cmd = [sys.executable, "scripts/export_descriptor.py"]
         completed = subprocess.run(

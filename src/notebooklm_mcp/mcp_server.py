@@ -9,7 +9,8 @@ from typing import Any
 
 from .analysis import AnalysisService
 from .research import ResearchService
-from .services import NotebookService
+from .resources import ResourceService
+from .services import DEFAULT_TEMPLATES, NotebookService
 from .material import MaterialService
 from .study import StudyService
 from .validation import SchemaValidationError, validate_input
@@ -39,6 +40,7 @@ class NotebookLMMCPServer:
         self.research = ResearchService()
         self.material = MaterialService(self.service.repo)
         self.study = StudyService(self.service.repo)
+        self.resources = ResourceService(self.service.repo)
         self._tools = self._register_tools()
 
     def list_tools(self) -> list[dict[str, Any]]:
@@ -66,7 +68,7 @@ class NotebookLMMCPServer:
                 "count": len(self._tools),
                 "names": sorted(self._tools.keys()),
             },
-            "resources": {"supported": False},
+            "resources": {"supported": True},
             "prompts": {"supported": False},
         }
 
@@ -76,7 +78,18 @@ class NotebookLMMCPServer:
             "server": self.server_info(),
             "capabilities": self.capabilities(),
             "tools": self.list_tools(),
+            "resources": self.list_resources(),
         }
+
+    def list_resources(self) -> list[dict[str, str]]:
+        return self.resources.list_resources()
+
+    def read_resource(self, uri: str) -> dict[str, Any]:
+        return self.resources.read_resource(
+            uri=uri,
+            server_info=self.server_info(),
+            templates=DEFAULT_TEMPLATES,
+        )
 
     def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         if tool_name not in self._tools:
