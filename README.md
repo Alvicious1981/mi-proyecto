@@ -24,6 +24,7 @@ Se inició el desarrollo de:
   - mapa mental interactivo.
 - Registro de herramientas MCP para los dominios `notebook.*`, `analysis.*`, `research.*`, `material.*` y `study.*`.
 - Validación de entrada por `inputSchema` con errores claros de contrato antes de ejecutar handlers.
+- Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Pruebas unitarias para validar los flujos base.
 
 ## Estructura
@@ -35,7 +36,7 @@ Se inició el desarrollo de:
 - `src/notebooklm_mcp/research.py`: búsqueda con citas y traducción de fuentes.
 - `src/notebooklm_mcp/material.py`: creación de material y exportación de resúmenes.
 - `src/notebooklm_mcp/study.py`: generación de quizzes y mapas interactivos.
-- `src/notebooklm_mcp/mcp_server.py`: herramientas MCP registradas y ejecutables.
+- `src/notebooklm_mcp/mcp_server.py`: herramientas MCP registradas, handshake y descriptor.
 - `src/notebooklm_mcp/validation.py`: validación de argumentos contra schemas de tools MCP.
 - `tests/test_notebook_service.py`: pruebas de comportamiento.
 
@@ -44,3 +45,11 @@ Se inició el desarrollo de:
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
+
+## Exportar descriptor MCP
+
+```bash
+PYTHONPATH=src python scripts/export_descriptor.py
+```
+
+El descriptor se genera en `artifacts/mcp-descriptor.json`.

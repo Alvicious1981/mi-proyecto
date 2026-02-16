@@ -1,3 +1,8 @@
+import json
+import subprocess
+import sys
+from pathlib import Path
+
 import unittest
 
 from notebooklm_mcp import NotebookLMMCPServer, NotebookService, SchemaValidationError
@@ -140,6 +145,32 @@ class MCPServerTest(unittest.TestCase):
                 "notebook.merge",
                 {"source_ids": ["a"], "destination_title": "fusion"},
             )
+
+    def test_descriptor_and_export_script(self) -> None:
+        server = NotebookLMMCPServer()
+        descriptor = server.descriptor()
+
+        self.assertIn("server", descriptor)
+        self.assertIn("capabilities", descriptor)
+        self.assertIn("tools", descriptor)
+        self.assertEqual(descriptor["server"]["name"], "notebooklm-mcp-server")
+        self.assertGreaterEqual(descriptor["capabilities"]["tools"]["count"], 1)
+
+        cmd = [sys.executable, "scripts/export_descriptor.py"]
+        completed = subprocess.run(
+            cmd,
+            cwd=Path(__file__).resolve().parents[1],
+            env={"PYTHONPATH": "src"},
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("Descriptor exportado", completed.stdout)
+
+        descriptor_path = Path(__file__).resolve().parents[1] / "artifacts" / "mcp-descriptor.json"
+        self.assertTrue(descriptor_path.exists())
+        loaded = json.loads(descriptor_path.read_text(encoding="utf-8"))
+        self.assertEqual(loaded["server"]["name"], "notebooklm-mcp-server")
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from .analysis import AnalysisService
@@ -12,6 +13,15 @@ from .services import NotebookService
 from .material import MaterialService
 from .study import StudyService
 from .validation import SchemaValidationError, validate_input
+
+
+SERVER_NAME = "notebooklm-mcp-server"
+SERVER_VERSION = "0.1.0"
+PROTOCOL_VERSION = "2025-01-01"
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 @dataclass(slots=True)
@@ -40,6 +50,33 @@ class NotebookLMMCPServer:
             }
             for tool in self._tools.values()
         ]
+
+    def server_info(self) -> dict[str, Any]:
+        """Información de handshake/descubrimiento para clientes MCP."""
+        return {
+            "name": SERVER_NAME,
+            "version": SERVER_VERSION,
+            "protocol_version": PROTOCOL_VERSION,
+            "generated_at": _utc_now(),
+        }
+
+    def capabilities(self) -> dict[str, Any]:
+        return {
+            "tools": {
+                "count": len(self._tools),
+                "names": sorted(self._tools.keys()),
+            },
+            "resources": {"supported": False},
+            "prompts": {"supported": False},
+        }
+
+    def descriptor(self) -> dict[str, Any]:
+        """Descriptor amigable para Agent Manager (descubrimiento básico)."""
+        return {
+            "server": self.server_info(),
+            "capabilities": self.capabilities(),
+            "tools": self.list_tools(),
+        }
 
     def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         if tool_name not in self._tools:

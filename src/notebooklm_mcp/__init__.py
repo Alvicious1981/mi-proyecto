@@ -1,6 +1,6 @@
 from .analysis import AnalysisService
 from .material import MaterialService
-from .mcp_server import NotebookLMMCPServer
+from .mcp_server import NotebookLMMCPServer, PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION
 from .research import ResearchService
 from .services import NotebookService
 from .study import StudyService
@@ -14,4 +14,7 @@ __all__ = [
     "MaterialService",
     "StudyService",
     "SchemaValidationError",
+    "SERVER_NAME",
+    "SERVER_VERSION",
+    "PROTOCOL_VERSION",
 ]
