@@ -23,6 +23,7 @@ Se inició el desarrollo de:
   - generación de quiz,
   - mapa mental interactivo.
 - Registro de herramientas MCP para los dominios `notebook.*`, `analysis.*`, `research.*`, `material.*` y `study.*`.
+- Validación de entrada por `inputSchema` con errores claros de contrato antes de ejecutar handlers.
 - Pruebas unitarias para validar los flujos base.
 
 ## Estructura
@@ -35,6 +36,7 @@ Se inició el desarrollo de:
 - `src/notebooklm_mcp/material.py`: creación de material y exportación de resúmenes.
 - `src/notebooklm_mcp/study.py`: generación de quizzes y mapas interactivos.
 - `src/notebooklm_mcp/mcp_server.py`: herramientas MCP registradas y ejecutables.
+- `src/notebooklm_mcp/validation.py`: validación de argumentos contra schemas de tools MCP.
 - `tests/test_notebook_service.py`: pruebas de comportamiento.
 
 ## Ejecutar pruebas

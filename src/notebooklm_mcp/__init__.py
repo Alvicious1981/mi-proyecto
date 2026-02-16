@@ -4,6 +4,7 @@ from .mcp_server import NotebookLMMCPServer
 from .research import ResearchService
 from .services import NotebookService
 from .study import StudyService
+from .validation import SchemaValidationError
 
 __all__ = [
     "NotebookLMMCPServer",
@@ -12,4 +13,5 @@ __all__ = [
     "ResearchService",
     "MaterialService",
     "StudyService",
+    "SchemaValidationError",
 ]

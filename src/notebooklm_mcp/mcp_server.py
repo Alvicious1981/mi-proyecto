@@ -11,6 +11,7 @@ from .research import ResearchService
 from .services import NotebookService
 from .material import MaterialService
 from .study import StudyService
+from .validation import SchemaValidationError, validate_input
 
 
 @dataclass(slots=True)
@@ -43,8 +44,14 @@ class NotebookLMMCPServer:
     def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         if tool_name not in self._tools:
             raise KeyError(f"Tool no encontrada: {tool_name}")
+
         tool = self._tools[tool_name]
-        return tool.handler(**arguments)
+        validate_input(arguments, tool.input_schema, tool_name)
+
+        try:
+            return tool.handler(**arguments)
+        except TypeError as exc:
+            raise SchemaValidationError(f"{tool_name}: argumentos inválidos ({exc})") from exc
 
     def _register_tools(self) -> dict[str, ToolDefinition]:
         return {

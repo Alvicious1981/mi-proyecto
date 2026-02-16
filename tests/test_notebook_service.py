@@ -1,6 +1,6 @@
 import unittest
 
-from notebooklm_mcp import NotebookLMMCPServer, NotebookService
+from notebooklm_mcp import NotebookLMMCPServer, NotebookService, SchemaValidationError
 
 
 class NotebookServiceTest(unittest.TestCase):
@@ -122,6 +122,24 @@ class MCPServerTest(unittest.TestCase):
         )
         self.assertEqual(translation["target_language"], "en")
         self.assertIn("notebook", translation["translated_text"].lower())
+
+    def test_input_validation_errors(self) -> None:
+        server = NotebookLMMCPServer()
+
+        with self.assertRaises(KeyError):
+            server.call_tool("unknown.tool", {})
+
+        with self.assertRaises(SchemaValidationError):
+            server.call_tool("notebook.create", {"description": "sin título"})
+
+        with self.assertRaises(SchemaValidationError):
+            server.call_tool("research.web_search_with_citations", {"query": "mcp", "limit": "dos"})
+
+        with self.assertRaises(SchemaValidationError):
+            server.call_tool(
+                "notebook.merge",
+                {"source_ids": ["a"], "destination_title": "fusion"},
+            )
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()
