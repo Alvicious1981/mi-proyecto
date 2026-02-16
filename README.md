@@ -26,6 +26,7 @@ Se inició el desarrollo de:
 - Validación de entrada por `inputSchema` con errores claros de contrato antes de ejecutar handlers.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Soporte de listado/lectura de recursos MCP (`list_resources`, `read_resource`).
+- Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio.
 - Pruebas unitarias para validar los flujos base.
 
 ## Estructura
@@ -40,6 +41,7 @@ Se inició el desarrollo de:
 - `src/notebooklm_mcp/mcp_server.py`: herramientas MCP registradas, handshake y descriptor.
 - `src/notebooklm_mcp/validation.py`: validación de argumentos contra schemas de tools MCP.
 - `src/notebooklm_mcp/resources.py`: recursos MCP estáticos y dinámicos por cuaderno.
+- `src/notebooklm_mcp/prompts.py`: prompts MCP predefinidos para research/study plan.
 - `tests/test_notebook_service.py`: pruebas de comportamiento.
 
 ## Ejecutar pruebas

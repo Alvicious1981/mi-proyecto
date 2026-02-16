@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .analysis import AnalysisService
+from .prompts import PromptService
 from .research import ResearchService
 from .resources import ResourceService
 from .services import DEFAULT_TEMPLATES, NotebookService
@@ -41,6 +42,7 @@ class NotebookLMMCPServer:
         self.material = MaterialService(self.service.repo)
         self.study = StudyService(self.service.repo)
         self.resources = ResourceService(self.service.repo)
+        self.prompts = PromptService(self.service.repo)
         self._tools = self._register_tools()
 
     def list_tools(self) -> list[dict[str, Any]]:
@@ -69,7 +71,7 @@ class NotebookLMMCPServer:
                 "names": sorted(self._tools.keys()),
             },
             "resources": {"supported": True},
-            "prompts": {"supported": False},
+            "prompts": {"supported": True},
         }
 
     def descriptor(self) -> dict[str, Any]:
@@ -79,6 +81,7 @@ class NotebookLMMCPServer:
             "capabilities": self.capabilities(),
             "tools": self.list_tools(),
             "resources": self.list_resources(),
+            "prompts": self.list_prompts(),
         }
 
     def list_resources(self) -> list[dict[str, str]]:
@@ -90,6 +93,12 @@ class NotebookLMMCPServer:
             server_info=self.server_info(),
             templates=DEFAULT_TEMPLATES,
         )
+
+    def list_prompts(self) -> list[dict[str, Any]]:
+        return self.prompts.list_prompts()
+
+    def get_prompt(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        return self.prompts.get_prompt(name=name, arguments=arguments)
 
     def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         if tool_name not in self._tools:
