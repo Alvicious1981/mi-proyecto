@@ -242,6 +242,29 @@ class MCPServerTest(unittest.TestCase):
         loaded = json.loads(descriptor_path.read_text(encoding="utf-8"))
         self.assertEqual(loaded["server"]["name"], "notebooklm-mcp-server")
 
+    def test_compatibility_report_and_script(self) -> None:
+        server = NotebookLMMCPServer()
+        report = server.compatibility_report()
+
+        self.assertTrue(report["compatible"])
+        self.assertEqual(report["summary"], "6/6 checks OK")
+
+        cmd = [sys.executable, "scripts/check_compatibility.py"]
+        completed = subprocess.run(
+            cmd,
+            cwd=Path(__file__).resolve().parents[1],
+            env={**os.environ, "PYTHONPATH": "src"},
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("Compatibilidad: OK", completed.stdout)
+
+        report_path = Path(__file__).resolve().parents[1] / "artifacts" / "compatibility-report.json"
+        self.assertTrue(report_path.exists())
+        loaded = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertTrue(loaded["compatible"])
+
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()
         created = server.call_tool(

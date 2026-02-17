@@ -57,3 +57,11 @@ PYTHONPATH=src python scripts/export_descriptor.py
 ```
 
 El descriptor se genera en `artifacts/mcp-descriptor.json`.
+
+## Verificar compatibilidad con Agent Manager
+
+```bash
+PYTHONPATH=src python scripts/check_compatibility.py
+```
+
+El reporte se genera en `artifacts/compatibility-report.json`.

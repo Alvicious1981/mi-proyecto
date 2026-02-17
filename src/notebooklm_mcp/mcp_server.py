@@ -100,6 +100,23 @@ class NotebookLMMCPServer:
     def get_prompt(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         return self.prompts.get_prompt(name=name, arguments=arguments)
 
+    def compatibility_report(self) -> dict[str, Any]:
+        """Reporte rápido de compatibilidad para Agent Manager."""
+        descriptor = self.descriptor()
+        checks = {
+            "has_server_name": bool(descriptor.get("server", {}).get("name")),
+            "has_server_version": bool(descriptor.get("server", {}).get("version")),
+            "has_protocol_version": bool(descriptor.get("server", {}).get("protocol_version")),
+            "has_tools": len(descriptor.get("tools", [])) > 0,
+            "resources_supported": bool(descriptor.get("capabilities", {}).get("resources", {}).get("supported")),
+            "prompts_supported": bool(descriptor.get("capabilities", {}).get("prompts", {}).get("supported")),
+        }
+        return {
+            "compatible": all(checks.values()),
+            "checks": checks,
+            "summary": f"{sum(checks.values())}/{len(checks)} checks OK",
+        }
+
     def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         if tool_name not in self._tools:
             raise KeyError(f"Tool no encontrada: {tool_name}")
