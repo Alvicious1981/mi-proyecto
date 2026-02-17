@@ -11,6 +11,7 @@ from .analysis import AnalysisService
 from .prompts import PromptService
 from .research import ResearchService
 from .resources import ResourceService
+from .security import SecurityService
 from .services import DEFAULT_TEMPLATES, NotebookService
 from .material import MaterialService
 from .study import StudyService
@@ -43,6 +44,7 @@ class NotebookLMMCPServer:
         self.study = StudyService(self.service.repo)
         self.resources = ResourceService(self.service.repo)
         self.prompts = PromptService(self.service.repo)
+        self.security = SecurityService()
         self._tools = self._register_tools()
 
     def list_tools(self) -> list[dict[str, Any]]:
@@ -72,6 +74,7 @@ class NotebookLMMCPServer:
             },
             "resources": {"supported": True},
             "prompts": {"supported": True},
+            "security": {"rbac": True, "roles": self.security.available_roles()},
         }
 
     def descriptor(self) -> dict[str, Any]:
@@ -110,6 +113,7 @@ class NotebookLMMCPServer:
             "has_tools": len(descriptor.get("tools", [])) > 0,
             "resources_supported": bool(descriptor.get("capabilities", {}).get("resources", {}).get("supported")),
             "prompts_supported": bool(descriptor.get("capabilities", {}).get("prompts", {}).get("supported")),
+            "rbac_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("rbac")),
         }
         return {
             "compatible": all(checks.values()),
@@ -117,11 +121,12 @@ class NotebookLMMCPServer:
             "summary": f"{sum(checks.values())}/{len(checks)} checks OK",
         }
 
-    def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
+    def call_tool(self, tool_name: str, arguments: dict[str, Any], actor_role: str = "owner") -> Any:
         if tool_name not in self._tools:
             raise KeyError(f"Tool no encontrada: {tool_name}")
 
         tool = self._tools[tool_name]
+        self.security.authorize(tool_name, actor_role=actor_role)
         validate_input(arguments, tool.input_schema, tool_name)
 
         try:

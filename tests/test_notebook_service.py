@@ -12,6 +12,7 @@ from notebooklm_mcp import (
     PromptValidationError,
     SchemaValidationError,
 )
+from notebooklm_mcp.security import AuthorizationError
 
 
 class NotebookServiceTest(unittest.TestCase):
@@ -247,7 +248,7 @@ class MCPServerTest(unittest.TestCase):
         report = server.compatibility_report()
 
         self.assertTrue(report["compatible"])
-        self.assertEqual(report["summary"], "6/6 checks OK")
+        self.assertEqual(report["summary"], "7/7 checks OK")
 
         cmd = [sys.executable, "scripts/check_compatibility.py"]
         completed = subprocess.run(
@@ -264,6 +265,16 @@ class MCPServerTest(unittest.TestCase):
         self.assertTrue(report_path.exists())
         loaded = json.loads(report_path.read_text(encoding="utf-8"))
         self.assertTrue(loaded["compatible"])
+
+    def test_rbac_authorization(self) -> None:
+        server = NotebookLMMCPServer()
+
+        # Viewer puede ejecutar búsquedas pero no crear cuadernos.
+        found = server.call_tool("notebook.search", {"query": "algo"}, actor_role="viewer")
+        self.assertIsInstance(found, list)
+
+        with self.assertRaises(AuthorizationError):
+            server.call_tool("notebook.create", {"title": "No permitido"}, actor_role="viewer")
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()
