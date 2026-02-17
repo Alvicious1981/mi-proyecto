@@ -1,6 +1,6 @@
 from .analysis import AnalysisService
 from .material import MaterialService
-from .prompts import PromptService
+from .prompts import PromptService, PromptValidationError
 from .mcp_server import NotebookLMMCPServer, PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION
 from .research import ResearchService
 from .resources import ResourceService
@@ -16,6 +16,7 @@ __all__ = [
     "ResourceService",
     "MaterialService",
     "PromptService",
+    "PromptValidationError",
     "StudyService",
     "SchemaValidationError",
     "SERVER_NAME",

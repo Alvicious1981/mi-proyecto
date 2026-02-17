@@ -1,11 +1,17 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import unittest
 
-from notebooklm_mcp import NotebookLMMCPServer, NotebookService, SchemaValidationError
+from notebooklm_mcp import (
+    NotebookLMMCPServer,
+    NotebookService,
+    PromptValidationError,
+    SchemaValidationError,
+)
 
 
 class NotebookServiceTest(unittest.TestCase):
@@ -179,6 +185,8 @@ class MCPServerTest(unittest.TestCase):
         names = {item["name"] for item in prompts}
         self.assertIn("research_brief", names)
         self.assertIn("study_plan", names)
+        first = prompts[0]
+        self.assertIn("argumentSchema", first)
 
         brief = server.get_prompt("research_brief", {"notebook_id": created["id"]})
         self.assertEqual(brief["name"], "research_brief")
@@ -187,6 +195,22 @@ class MCPServerTest(unittest.TestCase):
         plan = server.get_prompt("study_plan", {"notebook_id": created["id"], "days": 5})
         self.assertEqual(plan["name"], "study_plan")
         self.assertIn("5 días", plan["messages"][1]["content"])
+
+    def test_prompt_validation_errors(self) -> None:
+        server = NotebookLMMCPServer()
+        created = server.call_tool("notebook.create", {"title": "Prompt errors"})
+
+        with self.assertRaises(KeyError):
+            server.get_prompt("unknown_prompt", {"notebook_id": created["id"]})
+
+        with self.assertRaises(PromptValidationError):
+            server.get_prompt("research_brief", {})
+
+        with self.assertRaises(PromptValidationError):
+            server.get_prompt("study_plan", {"notebook_id": created["id"], "days": 0})
+
+        with self.assertRaises(PromptValidationError):
+            server.get_prompt("study_plan", {"notebook_id": created["id"], "days": "cinco"})
 
     def test_descriptor_and_export_script(self) -> None:
         server = NotebookLMMCPServer()
@@ -206,7 +230,7 @@ class MCPServerTest(unittest.TestCase):
         completed = subprocess.run(
             cmd,
             cwd=Path(__file__).resolve().parents[1],
-            env={"PYTHONPATH": "src"},
+            env={**os.environ, "PYTHONPATH": "src"},
             check=True,
             capture_output=True,
             text=True,

@@ -26,7 +26,7 @@ Se inició el desarrollo de:
 - Validación de entrada por `inputSchema` con errores claros de contrato antes de ejecutar handlers.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Soporte de listado/lectura de recursos MCP (`list_resources`, `read_resource`).
-- Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio.
+- Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio, con validación de argumentos.
 - Pruebas unitarias para validar los flujos base.
 
 ## Estructura
