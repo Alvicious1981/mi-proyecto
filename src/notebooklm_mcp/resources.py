@@ -32,6 +32,11 @@ class ResourceService:
                 name="NotebookTemplates",
                 description="Plantillas predefinidas disponibles para cuadernos.",
             ),
+            ResourceItem(
+                uri="mcp://audit/recent",
+                name="AuditRecent",
+                description="Últimos eventos de auditoría (redactados).",
+            ),
         ]
 
         notebook_resources = [
@@ -45,7 +50,13 @@ class ResourceService:
 
         return [self._serialize_resource(item) for item in [*static_resources, *notebook_resources]]
 
-    def read_resource(self, uri: str, server_info: dict[str, Any], templates: dict[str, list[str]]) -> dict[str, Any]:
+    def read_resource(
+        self,
+        uri: str,
+        server_info: dict[str, Any],
+        templates: dict[str, list[str]],
+        audit_recent: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         if uri == "mcp://server/info":
             return {
                 "uri": uri,
@@ -58,6 +69,16 @@ class ResourceService:
                 "uri": uri,
                 "mimeType": "application/json",
                 "contents": templates,
+            }
+
+        if uri == "mcp://audit/recent":
+            return {
+                "uri": uri,
+                "mimeType": "application/json",
+                "contents": {
+                    "events": audit_recent or [],
+                    "total": len(audit_recent or []),
+                },
             }
 
         notebook_prefix = "mcp://notebooks/"

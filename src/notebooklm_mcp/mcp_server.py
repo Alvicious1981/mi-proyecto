@@ -82,6 +82,7 @@ class NotebookLMMCPServer:
                 "api_key_enabled": bool(self.security.owner_api_key),
                 "roles": self.security.available_roles(),
                 "audit": True,
+                "audit_max_events": self.audit.max_events,
             },
         }
 
@@ -103,6 +104,7 @@ class NotebookLMMCPServer:
             uri=uri,
             server_info=self.server_info(),
             templates=DEFAULT_TEMPLATES,
+            audit_recent=self.audit.list_events(limit=50),
         )
 
     def list_prompts(self) -> list[dict[str, Any]]:
@@ -125,6 +127,7 @@ class NotebookLMMCPServer:
             "private_mode_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("private_mode")),
             "api_key_supported": "api_key_enabled" in descriptor.get("capabilities", {}).get("security", {}),
             "audit_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("audit")),
+            "audit_max_events_present": isinstance(descriptor.get("capabilities", {}).get("security", {}).get("audit_max_events"), int),
         }
         return {
             "compatible": all(checks.values()),
@@ -134,6 +137,9 @@ class NotebookLMMCPServer:
 
     def audit_log(self, limit: int = 50) -> list[dict[str, Any]]:
         return self.audit.list_events(limit=limit)
+
+    def audit_stats(self) -> dict[str, int]:
+        return self.audit.stats()
 
     def call_tool(
         self,

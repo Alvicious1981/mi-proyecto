@@ -15,6 +15,7 @@ def main() -> None:
     out_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(f"Compatibilidad: {'OK' if report['compatible'] else 'FAIL'}")
+    print(f"Checks OK: {report['summary']}")
     print(f"Reporte exportado en: {out_path}")
 
 

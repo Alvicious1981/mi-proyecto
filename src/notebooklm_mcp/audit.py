@@ -32,8 +32,9 @@ class AuditEvent:
 class AuditService:
     """Bitácora en memoria con redacción básica de datos sensibles."""
 
-    def __init__(self) -> None:
+    def __init__(self, max_events: int = 1000) -> None:
         self._events: list[AuditEvent] = []
+        self.max_events = max(1, max_events)
 
     def log_event(
         self,
@@ -51,6 +52,8 @@ class AuditService:
             metadata=safe_metadata,
         )
         self._events.append(event)
+        if len(self._events) > self.max_events:
+            self._events = self._events[-self.max_events:]
         return self._serialize(event)
 
     def list_events(self, limit: int = 50) -> list[dict[str, Any]]:
@@ -65,3 +68,12 @@ class AuditService:
             "status": event.status,
             "metadata": event.metadata,
         }
+
+    def clear(self) -> None:
+        self._events.clear()
+
+    def stats(self) -> dict[str, int]:
+        total = len(self._events)
+        success = sum(1 for e in self._events if e.status == "success")
+        error = sum(1 for e in self._events if e.status == "error")
+        return {"total": total, "success": success, "error": error}

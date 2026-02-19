@@ -252,7 +252,7 @@ class MCPServerTest(unittest.TestCase):
         report = server.compatibility_report()
 
         self.assertTrue(report["compatible"])
-        self.assertEqual(report["summary"], "10/10 checks OK")
+        self.assertEqual(report["summary"], "11/11 checks OK")
 
         cmd = [sys.executable, "scripts/check_compatibility.py"]
         completed = subprocess.run(
@@ -264,6 +264,7 @@ class MCPServerTest(unittest.TestCase):
             text=True,
         )
         self.assertIn("Compatibilidad: OK", completed.stdout)
+        self.assertIn("Checks OK:", completed.stdout)
 
         report_path = Path(__file__).resolve().parents[1] / "artifacts" / "compatibility-report.json"
         self.assertTrue(report_path.exists())
@@ -315,6 +316,23 @@ class MCPServerTest(unittest.TestCase):
             self.assertIn(logs[-1]["status"], {"success", "error"})
             # El token no debe persistirse en claro.
             self.assertNotIn("super-secreto", json.dumps(logs, ensure_ascii=False))
+
+    def test_audit_stats_and_resource(self) -> None:
+        server = NotebookLMMCPServer()
+        server.call_tool("notebook.search", {"query": "nada"})
+        server.call_tool("notebook.search", {"query": "otro"})
+
+        stats = server.audit_stats()
+        self.assertGreaterEqual(stats["total"], 2)
+        self.assertGreaterEqual(stats["success"], 2)
+
+        resources = server.list_resources()
+        uris = {item["uri"] for item in resources}
+        self.assertIn("mcp://audit/recent", uris)
+
+        audit_resource = server.read_resource("mcp://audit/recent")
+        self.assertIn("events", audit_resource["contents"])
+        self.assertGreaterEqual(audit_resource["contents"]["total"], 1)
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()

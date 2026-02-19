@@ -30,6 +30,7 @@ Se inició el desarrollo de:
 - API key opcional para `owner` en privado vía `NOTEBOOKLM_MCP_OWNER_API_KEY`.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Bitácora de auditoría en memoria con redacción de secretos/tokens.
+- Recurso MCP `mcp://audit/recent` para consultar eventos recientes de auditoría.
 - Soporte de listado/lectura de recursos MCP (`list_resources`, `read_resource`).
 - Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio, con validación de argumentos.
 - Pruebas unitarias para validar los flujos base.
@@ -72,3 +73,5 @@ PYTHONPATH=src python scripts/check_compatibility.py
 ```
 
 El reporte se genera en `artifacts/compatibility-report.json`.
+
+- La capacidad de seguridad expone `audit_max_events` para visibilidad de retención de bitácora.
