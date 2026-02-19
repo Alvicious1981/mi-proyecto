@@ -50,6 +50,9 @@ Se inició el desarrollo de:
 - `src/notebooklm_mcp/security.py`: autorización RBAC para ejecución de tools.
 - `src/notebooklm_mcp/resources.py`: recursos MCP estáticos y dinámicos por cuaderno.
 - `src/notebooklm_mcp/prompts.py`: prompts MCP predefinidos para research/study plan.
+- `frontend/index.html`: prototipo inicial del panel frontend (estado/compatibilidad).
+- `frontend/styles.css`: tema visual minimalista con colores suaves y glasmorfismo.
+- `frontend/app.js`: render de datos mock para vista de servidor, capacidades y checks.
 - `tests/test_notebook_service.py`: pruebas de comportamiento.
 
 ## Ejecutar pruebas
@@ -75,3 +78,9 @@ PYTHONPATH=src python scripts/check_compatibility.py
 El reporte se genera en `artifacts/compatibility-report.json`.
 
 - La capacidad de seguridad expone `audit_max_events` para visibilidad de retención de bitácora.
+
+## Frontend MVP (prototipo estático)
+
+Para abrir el panel de forma local, abre `frontend/index.html` en un navegador.
+
+> Nota: este frontend es un MVP estático con datos mock y se conectará al backend MCP en la siguiente iteración.
