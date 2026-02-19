@@ -27,6 +27,7 @@ Se inició el desarrollo de:
 - RBAC mínimo para autorización de tools.
 - Modo privado activado por defecto (single-user): solo rol `owner`.
 - Modo multi-rol opcional vía `NOTEBOOKLM_MCP_PRIVATE_MODE=false`.
+- API key opcional para `owner` en privado vía `NOTEBOOKLM_MCP_OWNER_API_KEY`.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Soporte de listado/lectura de recursos MCP (`list_resources`, `read_resource`).
 - Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio, con validación de argumentos.

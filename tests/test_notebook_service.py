@@ -5,10 +5,12 @@ import sys
 from pathlib import Path
 
 import unittest
+from unittest.mock import patch
 
 from notebooklm_mcp import (
     NotebookLMMCPServer,
     NotebookService,
+    AuthenticationError,
     PromptValidationError,
     SchemaValidationError,
 )
@@ -249,7 +251,7 @@ class MCPServerTest(unittest.TestCase):
         report = server.compatibility_report()
 
         self.assertTrue(report["compatible"])
-        self.assertEqual(report["summary"], "8/8 checks OK")
+        self.assertEqual(report["summary"], "9/9 checks OK")
 
         cmd = [sys.executable, "scripts/check_compatibility.py"]
         completed = subprocess.run(
@@ -277,6 +279,21 @@ class MCPServerTest(unittest.TestCase):
         # Owner mantiene acceso total.
         created = server.call_tool("notebook.create", {"title": "Permitido"}, actor_role="owner")
         self.assertEqual(created["title"], "Permitido")
+
+    def test_private_mode_owner_api_key(self) -> None:
+        with patch.dict(os.environ, {"NOTEBOOKLM_MCP_OWNER_API_KEY": "super-secreto"}, clear=False):
+            server = NotebookLMMCPServer()
+
+            with self.assertRaises(AuthenticationError):
+                server.call_tool("notebook.search", {"query": "x"}, actor_role="owner")
+
+            ok = server.call_tool(
+                "notebook.search",
+                {"query": "x"},
+                actor_role="owner",
+                actor_token="super-secreto",
+            )
+            self.assertIsInstance(ok, list)
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()
