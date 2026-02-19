@@ -1,4 +1,5 @@
 from .analysis import AnalysisService
+from .audit import AuditService
 from .material import MaterialService
 from .prompts import PromptService, PromptValidationError
 from .mcp_server import NotebookLMMCPServer, PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION
@@ -13,6 +14,7 @@ __all__ = [
     "NotebookLMMCPServer",
     "NotebookService",
     "AnalysisService",
+    "AuditService",
     "ResearchService",
     "ResourceService",
     "MaterialService",

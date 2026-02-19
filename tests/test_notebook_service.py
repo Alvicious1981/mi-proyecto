@@ -229,6 +229,7 @@ class MCPServerTest(unittest.TestCase):
         self.assertTrue(descriptor["capabilities"]["resources"]["supported"])
         self.assertTrue(descriptor["capabilities"]["prompts"]["supported"])
         self.assertTrue(descriptor["capabilities"]["security"]["private_mode"])
+        self.assertTrue(descriptor["capabilities"]["security"]["audit"])
 
         cmd = [sys.executable, "scripts/export_descriptor.py"]
         completed = subprocess.run(
@@ -251,7 +252,7 @@ class MCPServerTest(unittest.TestCase):
         report = server.compatibility_report()
 
         self.assertTrue(report["compatible"])
-        self.assertEqual(report["summary"], "9/9 checks OK")
+        self.assertEqual(report["summary"], "10/10 checks OK")
 
         cmd = [sys.executable, "scripts/check_compatibility.py"]
         completed = subprocess.run(
@@ -294,6 +295,26 @@ class MCPServerTest(unittest.TestCase):
                 actor_token="super-secreto",
             )
             self.assertIsInstance(ok, list)
+
+    def test_audit_log_redaction_and_events(self) -> None:
+        with patch.dict(os.environ, {"NOTEBOOKLM_MCP_OWNER_API_KEY": "super-secreto"}, clear=False):
+            server = NotebookLMMCPServer()
+
+            with self.assertRaises(AuthenticationError):
+                server.call_tool("notebook.search", {"query": "x"}, actor_role="owner")
+
+            server.call_tool(
+                "notebook.search",
+                {"query": "x"},
+                actor_role="owner",
+                actor_token="super-secreto",
+            )
+
+            logs = server.audit_log(limit=10)
+            self.assertGreaterEqual(len(logs), 2)
+            self.assertIn(logs[-1]["status"], {"success", "error"})
+            # El token no debe persistirse en claro.
+            self.assertNotIn("super-secreto", json.dumps(logs, ensure_ascii=False))
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()

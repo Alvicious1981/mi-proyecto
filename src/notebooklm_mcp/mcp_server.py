@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .analysis import AnalysisService
+from .audit import AuditService
 from .prompts import PromptService
 from .research import ResearchService
 from .resources import ResourceService
@@ -45,6 +46,7 @@ class NotebookLMMCPServer:
         self.resources = ResourceService(self.service.repo)
         self.prompts = PromptService(self.service.repo)
         self.security = SecurityService()
+        self.audit = AuditService()
         self._tools = self._register_tools()
 
     def list_tools(self) -> list[dict[str, Any]]:
@@ -79,6 +81,7 @@ class NotebookLMMCPServer:
                 "private_mode": self.security.private_mode,
                 "api_key_enabled": bool(self.security.owner_api_key),
                 "roles": self.security.available_roles(),
+                "audit": True,
             },
         }
 
@@ -121,12 +124,16 @@ class NotebookLMMCPServer:
             "rbac_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("rbac")),
             "private_mode_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("private_mode")),
             "api_key_supported": "api_key_enabled" in descriptor.get("capabilities", {}).get("security", {}),
+            "audit_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("audit")),
         }
         return {
             "compatible": all(checks.values()),
             "checks": checks,
             "summary": f"{sum(checks.values())}/{len(checks)} checks OK",
         }
+
+    def audit_log(self, limit: int = 50) -> list[dict[str, Any]]:
+        return self.audit.list_events(limit=limit)
 
     def call_tool(
         self,
@@ -136,17 +143,33 @@ class NotebookLMMCPServer:
         actor_token: str | None = None,
     ) -> Any:
         if tool_name not in self._tools:
+            self.audit.log_event(actor_role=actor_role, action=tool_name, status="error", metadata={"error": "tool_not_found"})
             raise KeyError(f"Tool no encontrada: {tool_name}")
 
         tool = self._tools[tool_name]
-        self.security.authenticate(actor_role=actor_role, actor_token=actor_token)
-        self.security.authorize(tool_name, actor_role=actor_role)
-        validate_input(arguments, tool.input_schema, tool_name)
 
         try:
-            return tool.handler(**arguments)
-        except TypeError as exc:
-            raise SchemaValidationError(f"{tool_name}: argumentos inválidos ({exc})") from exc
+            self.security.authenticate(actor_role=actor_role, actor_token=actor_token)
+            self.security.authorize(tool_name, actor_role=actor_role)
+            validate_input(arguments, tool.input_schema, tool_name)
+            result = tool.handler(**arguments)
+            self.audit.log_event(
+                actor_role=actor_role,
+                action=tool_name,
+                status="success",
+                metadata={"arguments": arguments, "actor_token": actor_token},
+            )
+            return result
+        except Exception as exc:
+            self.audit.log_event(
+                actor_role=actor_role,
+                action=tool_name,
+                status="error",
+                metadata={"arguments": arguments, "actor_token": actor_token, "error": str(exc)},
+            )
+            if isinstance(exc, TypeError):
+                raise SchemaValidationError(f"{tool_name}: argumentos inválidos ({exc})") from exc
+            raise
 
     def _register_tools(self) -> dict[str, ToolDefinition]:
         return {

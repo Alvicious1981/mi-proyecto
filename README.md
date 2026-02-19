@@ -29,6 +29,7 @@ Se inició el desarrollo de:
 - Modo multi-rol opcional vía `NOTEBOOKLM_MCP_PRIVATE_MODE=false`.
 - API key opcional para `owner` en privado vía `NOTEBOOKLM_MCP_OWNER_API_KEY`.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
+- Bitácora de auditoría en memoria con redacción de secretos/tokens.
 - Soporte de listado/lectura de recursos MCP (`list_resources`, `read_resource`).
 - Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio, con validación de argumentos.
 - Pruebas unitarias para validar los flujos base.
@@ -39,6 +40,7 @@ Se inició el desarrollo de:
 - `src/notebooklm_mcp/repository.py`: repositorio en memoria.
 - `src/notebooklm_mcp/services.py`: lógica de negocio para cuadernos.
 - `src/notebooklm_mcp/analysis.py`: análisis de contradicciones, preguntas y tono.
+- `src/notebooklm_mcp/audit.py`: auditoría de ejecución y redacción de datos sensibles.
 - `src/notebooklm_mcp/research.py`: búsqueda con citas y traducción de fuentes.
 - `src/notebooklm_mcp/material.py`: creación de material y exportación de resúmenes.
 - `src/notebooklm_mcp/study.py`: generación de quizzes y mapas interactivos.
