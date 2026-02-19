@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NotebookLM MCP · Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-blobs"></div>
+    <main class="layout">
+      <aside class="glass sidebar">
+        <h1>NotebookLM MCP</h1>
+        <p class="subtitle">Modo privado · Panel MVP</p>
+        <nav>
+          <button class="nav-btn active">Estado</button>
+          <button class="nav-btn" disabled>Tools</button>
+          <button class="nav-btn" disabled>Resources</button>
+          <button class="nav-btn" disabled>Prompts</button>
+          <button class="nav-btn" disabled>Auditoría</button>
+        </nav>
+      </aside>
+
+      <section class="content">
+        <header class="glass topbar">
+          <div>
+            <h2>Resumen de compatibilidad</h2>
+            <p>
+              Vista rápida para validar integración con Agent Manager.
+              <span id="data-source" class="source-pill">Cargando fuente...</span>
+            </p>
+          </div>
+          <div class="topbar-actions">
+            <button id="refresh-btn" class="refresh-btn" type="button">Actualizar</button>
+            <span id="compatibility-badge" class="badge">Cargando...</span>
+          </div>
+        </header>
+
+        <p id="status-message" class="status-message" role="status"></p>
+
+        <div class="cards">
+          <article class="glass card">
+            <h3>Servidor</h3>
+            <ul id="server-info"></ul>
+          </article>
+
+          <article class="glass card">
+            <h3>Capacidades</h3>
+            <ul id="capabilities"></ul>
+          </article>
+
+          <article class="glass card wide">
+            <h3>Checks</h3>
+            <ul id="checks"></ul>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
