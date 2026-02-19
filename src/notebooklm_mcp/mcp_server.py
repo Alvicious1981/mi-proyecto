@@ -81,7 +81,6 @@ class NotebookLMMCPServer:
             "security": {
                 "rbac": True,
                 "private_mode": self.security.private_mode,
-                "api_key_enabled": bool(self.security.owner_api_key),
                 "roles": self.security.available_roles(),
                 "audit": True,
                 "audit_max_events": self.audit.max_events,
@@ -127,7 +126,6 @@ class NotebookLMMCPServer:
             "prompts_supported": bool(descriptor.get("capabilities", {}).get("prompts", {}).get("supported")),
             "rbac_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("rbac")),
             "private_mode_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("private_mode")),
-            "api_key_supported": "api_key_enabled" in descriptor.get("capabilities", {}).get("security", {}),
             "audit_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("audit")),
             "audit_max_events_present": isinstance(descriptor.get("capabilities", {}).get("security", {}).get("audit_max_events"), int),
         }
@@ -148,7 +146,6 @@ class NotebookLMMCPServer:
         tool_name: str,
         arguments: dict[str, Any],
         actor_role: str = "owner",
-        actor_token: str | None = None,
     ) -> Any:
         if tool_name not in self._tools:
             self.audit.log_event(actor_role=actor_role, action=tool_name, status="error", metadata={"error": "tool_not_found"})
@@ -157,7 +154,6 @@ class NotebookLMMCPServer:
         tool = self._tools[tool_name]
 
         try:
-            self.security.authenticate(actor_role=actor_role, actor_token=actor_token)
             self.security.authorize(tool_name, actor_role=actor_role)
             validate_input(arguments, tool.input_schema, tool_name)
             result = tool.handler(**arguments)
@@ -165,7 +161,7 @@ class NotebookLMMCPServer:
                 actor_role=actor_role,
                 action=tool_name,
                 status="success",
-                metadata={"arguments": arguments, "actor_token": actor_token},
+                metadata={"arguments": arguments},
             )
             return result
         except Exception as exc:
@@ -173,7 +169,7 @@ class NotebookLMMCPServer:
                 actor_role=actor_role,
                 action=tool_name,
                 status="error",
-                metadata={"arguments": arguments, "actor_token": actor_token, "error": str(exc)},
+                metadata={"arguments": arguments, "error": str(exc)},
             )
             if isinstance(exc, TypeError):
                 raise SchemaValidationError(f"{tool_name}: argumentos inválidos ({exc})") from exc

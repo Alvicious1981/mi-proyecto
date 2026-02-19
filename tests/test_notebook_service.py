@@ -5,12 +5,10 @@ import sys
 from pathlib import Path
 
 import unittest
-from unittest.mock import patch
 
 from notebooklm_mcp import (
     NotebookLMMCPServer,
     NotebookService,
-    AuthenticationError,
     PromptValidationError,
     SchemaValidationError,
 )
@@ -262,7 +260,7 @@ class MCPServerTest(unittest.TestCase):
         report = server.compatibility_report()
 
         self.assertTrue(report["compatible"])
-        self.assertEqual(report["summary"], "11/11 checks OK")
+        self.assertEqual(report["summary"], "10/10 checks OK")
 
         cmd = [sys.executable, "scripts/check_compatibility.py"]
         completed = subprocess.run(
@@ -284,48 +282,26 @@ class MCPServerTest(unittest.TestCase):
     def test_rbac_authorization(self) -> None:
         server = NotebookLMMCPServer()
 
-        # En modo privado solo existe owner.
+        # Solo owner está permitido.
         with self.assertRaises(AuthorizationError):
             server.call_tool("notebook.search", {"query": "algo"}, actor_role="viewer")
 
-        # Owner mantiene acceso total.
         created = server.call_tool("notebook.create", {"title": "Permitido"}, actor_role="owner")
         self.assertEqual(created["title"], "Permitido")
 
-    def test_private_mode_owner_api_key(self) -> None:
-        with patch.dict(os.environ, {"NOTEBOOKLM_MCP_OWNER_API_KEY": "super-secreto"}, clear=False):
-            server = NotebookLMMCPServer()
 
-            with self.assertRaises(AuthenticationError):
-                server.call_tool("notebook.search", {"query": "x"}, actor_role="owner")
-
-            ok = server.call_tool(
-                "notebook.search",
-                {"query": "x"},
-                actor_role="owner",
-                actor_token="super-secreto",
-            )
-            self.assertIsInstance(ok, list)
 
     def test_audit_log_redaction_and_events(self) -> None:
-        with patch.dict(os.environ, {"NOTEBOOKLM_MCP_OWNER_API_KEY": "super-secreto"}, clear=False):
-            server = NotebookLMMCPServer()
+        server = NotebookLMMCPServer()
 
-            with self.assertRaises(AuthenticationError):
-                server.call_tool("notebook.search", {"query": "x"}, actor_role="owner")
+        with self.assertRaises(KeyError):
+            server.call_tool("unknown.tool", {})
 
-            server.call_tool(
-                "notebook.search",
-                {"query": "x"},
-                actor_role="owner",
-                actor_token="super-secreto",
-            )
+        server.call_tool("notebook.search", {"query": "x"}, actor_role="owner")
 
-            logs = server.audit_log(limit=10)
-            self.assertGreaterEqual(len(logs), 2)
-            self.assertIn(logs[-1]["status"], {"success", "error"})
-            # El token no debe persistirse en claro.
-            self.assertNotIn("super-secreto", json.dumps(logs, ensure_ascii=False))
+        logs = server.audit_log(limit=10)
+        self.assertGreaterEqual(len(logs), 2)
+        self.assertIn(logs[-1]["status"], {"success", "error"})
 
     def test_audit_stats_and_resource(self) -> None:
         server = NotebookLMMCPServer()
@@ -355,10 +331,8 @@ class MCPServerTest(unittest.TestCase):
         self.assertTrue(cleared["cleared"])
         self.assertEqual(cleared["after"]["total"], 0)
 
-        with patch.dict(os.environ, {"NOTEBOOKLM_MCP_PRIVATE_MODE": "false"}, clear=False):
-            multi_role_server = NotebookLMMCPServer()
-            with self.assertRaises(AuthorizationError):
-                multi_role_server.call_tool("audit.clear", {}, actor_role="viewer")
+        with self.assertRaises(AuthorizationError):
+            server.call_tool("audit.clear", {}, actor_role="viewer")
 
 
     def test_system_backup_and_restore_state(self) -> None:
@@ -379,16 +353,12 @@ class MCPServerTest(unittest.TestCase):
         history = server.call_tool("notebook.history", {"notebook_id": created["id"]})
         self.assertGreaterEqual(len(history), 1)
 
-        with patch.dict(os.environ, {"NOTEBOOKLM_MCP_PRIVATE_MODE": "false"}, clear=False):
-            multi_role_server = NotebookLMMCPServer()
-            viewer_backup = multi_role_server.call_tool("system.backup_state", {}, actor_role="viewer")
-            self.assertIn("notebooks", viewer_backup)
-            with self.assertRaises(AuthorizationError):
-                multi_role_server.call_tool(
-                    "system.restore_state",
-                    {"state_json": json.dumps(backup)},
-                    actor_role="viewer",
-                )
+        with self.assertRaises(AuthorizationError):
+            server.call_tool(
+                "system.restore_state",
+                {"state_json": json.dumps(backup)},
+                actor_role="viewer",
+            )
 
 
     def test_restore_state_validation_errors(self) -> None:

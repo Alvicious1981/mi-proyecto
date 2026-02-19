@@ -5,7 +5,7 @@ from .prompts import PromptService, PromptValidationError
 from .mcp_server import NotebookLMMCPServer, PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION
 from .research import ResearchService
 from .resources import ResourceService
-from .security import AuthenticationError, AuthorizationError, SecurityService
+from .security import AuthorizationError, SecurityService
 from .services import NotebookService
 from .study import StudyService
 from .validation import SchemaValidationError
@@ -22,7 +22,6 @@ __all__ = [
     "PromptValidationError",
     "SecurityService",
     "AuthorizationError",
-    "AuthenticationError",
     "StudyService",
     "SchemaValidationError",
     "SERVER_NAME",

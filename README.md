@@ -24,10 +24,7 @@ Se inició el desarrollo de:
   - mapa mental interactivo.
 - Registro de herramientas MCP para los dominios `notebook.*`, `analysis.*`, `research.*`, `material.*`, `study.*`, `system.*` y `audit.*`.
 - Validación de entrada por `inputSchema` con errores claros de contrato antes de ejecutar handlers.
-- RBAC mínimo para autorización de tools.
-- Modo privado activado por defecto (single-user): solo rol `owner`.
-- Modo multi-rol opcional vía `NOTEBOOKLM_MCP_PRIVATE_MODE=false`.
-- API key opcional para `owner` en privado vía `NOTEBOOKLM_MCP_OWNER_API_KEY`.
+- Autorización mínima en entorno privado: solo rol `owner` habilitado para ejecutar tools.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Bitácora de auditoría en memoria con redacción de secretos/tokens.
 - Recurso MCP `mcp://audit/recent` para consultar eventos recientes de auditoría.
@@ -48,7 +45,7 @@ Se inició el desarrollo de:
 - `src/notebooklm_mcp/study.py`: generación de quizzes y mapas interactivos.
 - `src/notebooklm_mcp/mcp_server.py`: herramientas MCP registradas, handshake y descriptor.
 - `src/notebooklm_mcp/validation.py`: validación de argumentos contra schemas de tools MCP.
-- `src/notebooklm_mcp/security.py`: autorización RBAC para ejecución de tools.
+- `src/notebooklm_mcp/security.py`: autorización simplificada para entorno privado (owner-only).
 - `src/notebooklm_mcp/resources.py`: recursos MCP estáticos y dinámicos por cuaderno.
 - `src/notebooklm_mcp/prompts.py`: prompts MCP predefinidos para research/study plan.
 - `frontend/index.html`: prototipo inicial del panel frontend (estado/compatibilidad).

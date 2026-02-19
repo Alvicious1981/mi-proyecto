@@ -163,9 +163,9 @@ Además, el diseño UI contemplará glasmorfismo para paneles laterales y popups
 ## 5.1 Seguridad y Privacidad
 
 ### Autenticación y autorización
-- OAuth 2.1 / OIDC para usuarios.
-- Tokens de acceso de corta duración + refresh tokens rotativos.
-- RBAC básico: `owner`, `editor`, `viewer`.
+- Entorno privado (single-user) dentro de Antigravity Agent Manager.
+- Sin capa de autenticación de usuarios final en MVP (se asume sesión privada del entorno).
+- Autorización mínima local: rol `owner` único para operaciones administrativas.
 
 ### Protección de datos
 - Cifrado en tránsito (TLS 1.2+) y en reposo (AES-256 o equivalente del proveedor).
@@ -317,8 +317,7 @@ Además, el diseño UI contemplará glasmorfismo para paneles laterales y popups
 - [ ] Configurar colas para tareas asíncronas pesadas.
 
 ## 9.4 Seguridad y cumplimiento
-- [ ] Implementar autenticación OAuth/OIDC.
-- [ ] Definir RBAC y middleware de autorización.
+- [ ] Mantener autorización mínima owner-only para entorno privado y documentar límites.
 - [ ] Aplicar cifrado en tránsito/descanso.
 - [ ] Añadir política de retención y borrado de datos.
 - [ ] Implementar redacción de PII en logs.
@@ -360,7 +359,7 @@ Además, el diseño UI contemplará glasmorfismo para paneles laterales y popups
 - La búsqueda web retorna citas estructuradas con URL y extracto.
 - Se pueden generar tests y mapa mental básico.
 - Se exporta al menos un formato de resumen (`.md` o `.pptx`).
-- Seguridad mínima implementada (auth + RBAC + logs de auditoría).
+- Seguridad mínima implementada (entorno privado + autorización owner-only + logs de auditoría).
 - Compatibilidad validada en flujo básico con Agent Manager de Antigravity.
 
 ---
