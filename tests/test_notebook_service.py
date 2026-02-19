@@ -226,6 +226,7 @@ class MCPServerTest(unittest.TestCase):
         self.assertGreaterEqual(descriptor["capabilities"]["tools"]["count"], 1)
         self.assertTrue(descriptor["capabilities"]["resources"]["supported"])
         self.assertTrue(descriptor["capabilities"]["prompts"]["supported"])
+        self.assertTrue(descriptor["capabilities"]["security"]["private_mode"])
 
         cmd = [sys.executable, "scripts/export_descriptor.py"]
         completed = subprocess.run(
@@ -248,7 +249,7 @@ class MCPServerTest(unittest.TestCase):
         report = server.compatibility_report()
 
         self.assertTrue(report["compatible"])
-        self.assertEqual(report["summary"], "7/7 checks OK")
+        self.assertEqual(report["summary"], "8/8 checks OK")
 
         cmd = [sys.executable, "scripts/check_compatibility.py"]
         completed = subprocess.run(
@@ -269,12 +270,13 @@ class MCPServerTest(unittest.TestCase):
     def test_rbac_authorization(self) -> None:
         server = NotebookLMMCPServer()
 
-        # Viewer puede ejecutar búsquedas pero no crear cuadernos.
-        found = server.call_tool("notebook.search", {"query": "algo"}, actor_role="viewer")
-        self.assertIsInstance(found, list)
-
+        # En modo privado solo existe owner.
         with self.assertRaises(AuthorizationError):
-            server.call_tool("notebook.create", {"title": "No permitido"}, actor_role="viewer")
+            server.call_tool("notebook.search", {"query": "algo"}, actor_role="viewer")
+
+        # Owner mantiene acceso total.
+        created = server.call_tool("notebook.create", {"title": "Permitido"}, actor_role="owner")
+        self.assertEqual(created["title"], "Permitido")
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()

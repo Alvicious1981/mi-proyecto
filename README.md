@@ -24,7 +24,9 @@ Se inició el desarrollo de:
   - mapa mental interactivo.
 - Registro de herramientas MCP para los dominios `notebook.*`, `analysis.*`, `research.*`, `material.*` y `study.*`.
 - Validación de entrada por `inputSchema` con errores claros de contrato antes de ejecutar handlers.
-- RBAC mínimo por rol (`owner`, `editor`, `viewer`) para autorización de tools.
+- RBAC mínimo para autorización de tools.
+- Modo privado activado por defecto (single-user): solo rol `owner`.
+- Modo multi-rol opcional vía `NOTEBOOKLM_MCP_PRIVATE_MODE=false`.
 - Descriptor/handshake base para compatibilidad de descubrimiento con Agent Managers.
 - Soporte de listado/lectura de recursos MCP (`list_resources`, `read_resource`).
 - Soporte de prompts MCP (`list_prompts`, `get_prompt`) para flujos guiados de investigación/estudio, con validación de argumentos.

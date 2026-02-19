@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 
 
 class AuthorizationError(PermissionError):
@@ -14,9 +15,20 @@ class SecurityPolicy:
 
 
 class SecurityService:
-    """Capa mínima RBAC para el servidor MCP."""
+    """Capa mínima RBAC para el servidor MCP.
 
-    def __init__(self) -> None:
+    Por defecto opera en modo privado (single-user), permitiendo solo el rol owner.
+    """
+
+    def __init__(self, private_mode: bool | None = None) -> None:
+        self.private_mode = self._resolve_private_mode(private_mode)
+
+        if self.private_mode:
+            self._policies = {
+                "owner": SecurityPolicy(role="owner", allowed_tools=("*",)),
+            }
+            return
+
         self._policies = {
             "owner": SecurityPolicy(role="owner", allowed_tools=("*",)),
             "editor": SecurityPolicy(
@@ -70,3 +82,9 @@ class SecurityService:
 
     def available_roles(self) -> list[str]:
         return sorted(self._policies.keys())
+
+    def _resolve_private_mode(self, private_mode: bool | None) -> bool:
+        if private_mode is not None:
+            return private_mode
+        env_value = os.getenv("NOTEBOOKLM_MCP_PRIVATE_MODE", "true").strip().lower()
+        return env_value not in {"0", "false", "no", "off"}

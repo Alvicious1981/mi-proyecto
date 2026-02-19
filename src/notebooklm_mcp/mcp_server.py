@@ -74,7 +74,11 @@ class NotebookLMMCPServer:
             },
             "resources": {"supported": True},
             "prompts": {"supported": True},
-            "security": {"rbac": True, "roles": self.security.available_roles()},
+            "security": {
+                "rbac": True,
+                "private_mode": self.security.private_mode,
+                "roles": self.security.available_roles(),
+            },
         }
 
     def descriptor(self) -> dict[str, Any]:
@@ -114,6 +118,7 @@ class NotebookLMMCPServer:
             "resources_supported": bool(descriptor.get("capabilities", {}).get("resources", {}).get("supported")),
             "prompts_supported": bool(descriptor.get("capabilities", {}).get("prompts", {}).get("supported")),
             "rbac_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("rbac")),
+            "private_mode_enabled": bool(descriptor.get("capabilities", {}).get("security", {}).get("private_mode")),
         }
         return {
             "compatible": all(checks.values()),
