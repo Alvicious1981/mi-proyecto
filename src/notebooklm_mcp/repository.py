@@ -39,3 +39,14 @@ class NotebookRepository:
 
     def history(self, notebook_id: str) -> list[ChangeLog]:
         return [deepcopy(log) for log in self._history[notebook_id]]
+
+
+    def replace_state(
+        self,
+        notebooks: list[Notebook],
+        history: dict[str, list[ChangeLog]],
+    ) -> None:
+        self._notebooks = {notebook.id: deepcopy(notebook) for notebook in notebooks}
+        self._history = defaultdict(list)
+        for notebook_id, logs in history.items():
+            self._history[notebook_id] = [deepcopy(log) for log in logs]

@@ -381,12 +381,27 @@ class MCPServerTest(unittest.TestCase):
 
         with patch.dict(os.environ, {"NOTEBOOKLM_MCP_PRIVATE_MODE": "false"}, clear=False):
             multi_role_server = NotebookLMMCPServer()
+            viewer_backup = multi_role_server.call_tool("system.backup_state", {}, actor_role="viewer")
+            self.assertIn("notebooks", viewer_backup)
             with self.assertRaises(AuthorizationError):
                 multi_role_server.call_tool(
                     "system.restore_state",
                     {"state_json": json.dumps(backup)},
                     actor_role="viewer",
                 )
+
+
+    def test_restore_state_validation_errors(self) -> None:
+        server = NotebookLMMCPServer()
+
+        with self.assertRaises(SchemaValidationError):
+            server.call_tool("system.restore_state", {"state_json": "{invalid"})
+
+        with self.assertRaises(ValueError):
+            server.call_tool(
+                "system.restore_state",
+                {"state_json": json.dumps({"notebooks": "oops", "history": {}})},
+            )
 
     def test_material_and_study_tools(self) -> None:
         server = NotebookLMMCPServer()

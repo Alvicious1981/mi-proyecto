@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+from json import JSONDecodeError
 from typing import Any
 
 from .analysis import AnalysisService
@@ -200,7 +201,11 @@ class NotebookLMMCPServer:
         return self.service.export_state()
 
     def _tool_system_restore_state(self, state_json: str) -> dict[str, Any]:
-        state = json.loads(state_json)
+        try:
+            state = json.loads(state_json)
+        except JSONDecodeError as exc:
+            raise SchemaValidationError(f"system.restore_state: state_json inválido ({exc.msg})") from exc
+
         imported = self.service.import_state(state=state, mode="replace")
         return {
             "restored": True,

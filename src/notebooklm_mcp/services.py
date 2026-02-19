@@ -180,12 +180,12 @@ class NotebookService:
         if not isinstance(history_payload, dict):
             raise ValueError("Estado inválido: 'history' debe ser un objeto")
 
-        self.repo._notebooks.clear()  # noqa: SLF001 - repositorio en memoria controlado
-        self.repo._history.clear()  # noqa: SLF001 - repositorio en memoria controlado
+        notebooks: list[Notebook] = []
+        history: dict[str, list[ChangeLog]] = {}
 
-        imported_notebooks = 0
-        imported_logs = 0
         for notebook_data in notebooks_payload:
+            if not isinstance(notebook_data, dict):
+                raise ValueError("Estado inválido: cada notebook debe ser un objeto")
             notebook = Notebook(
                 id=notebook_data["id"],
                 title=notebook_data["title"],
@@ -194,14 +194,19 @@ class NotebookService:
                 language=notebook_data.get("language", "es"),
                 template_id=notebook_data.get("template_id"),
                 sections=notebook_data.get("sections", []),
-                created_at=datetime.fromisoformat(notebook_data["created_at"]),
-                updated_at=datetime.fromisoformat(notebook_data["updated_at"]),
+                created_at=self._parse_iso_datetime(notebook_data["created_at"]),
+                updated_at=self._parse_iso_datetime(notebook_data["updated_at"]),
             )
-            self.repo.add(notebook)
-            imported_notebooks += 1
+            notebooks.append(notebook)
 
             notebook_history = history_payload.get(notebook.id, [])
+            if not isinstance(notebook_history, list):
+                raise ValueError("Estado inválido: el historial por notebook debe ser una lista")
+
+            logs: list[ChangeLog] = []
             for log_data in notebook_history:
+                if not isinstance(log_data, dict):
+                    raise ValueError("Estado inválido: cada registro de historial debe ser un objeto")
                 log = ChangeLog(
                     id=log_data["id"],
                     notebook_id=notebook.id,
@@ -209,15 +214,21 @@ class NotebookService:
                     actor=log_data.get("actor", "system"),
                     diff_summary=log_data.get("diff_summary", ""),
                     metadata=log_data.get("metadata", {}),
-                    timestamp=datetime.fromisoformat(log_data["timestamp"]),
+                    timestamp=self._parse_iso_datetime(log_data["timestamp"]),
                 )
-                self.repo.record(log)
-                imported_logs += 1
+                logs.append(log)
+            history[notebook.id] = logs
+
+        self.repo.replace_state(notebooks=notebooks, history=history)
 
         return {
-            "notebooks": imported_notebooks,
-            "history_logs": imported_logs,
+            "notebooks": len(notebooks),
+            "history_logs": sum(len(logs) for logs in history.values()),
         }
+
+    def _parse_iso_datetime(self, value: str) -> datetime:
+        normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+        return datetime.fromisoformat(normalized)
 
     def _merge_sections(self, notebooks: list[Notebook], strategy: str) -> list[str]:
         if strategy == "prioridad_origen":
